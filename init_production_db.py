@@ -6,23 +6,35 @@
 import os
 import sys
 from datetime import datetime, timedelta
-from database.models import User, Event, Registration, SessionLocal, init_db
 
 def create_production_data():
     """Создание начальных данных для продакшна"""
     print("🚀 Инициализация продакшн базы данных...")
     
+    # Проверяем наличие DATABASE_URL
+    database_url = os.getenv('DATABASE_URL')
+    if not database_url:
+        print("❌ Переменная DATABASE_URL не найдена")
+        sys.exit(1)
+    
+    print(f"🔗 Подключение к базе данных: {database_url.split('@')[0] if '@' in database_url else 'SQLite'}@***")
+    
     try:
+        # Импортируем модели после проверки URL
+        from database.models import User, Event, Registration, SessionLocal, init_db
+        
         # Инициализация таблиц
         init_db()
-        print("✅ Таблицы созданы")
         
         db = SessionLocal()
         
         try:
             # Проверяем, есть ли уже данные
-            if db.query(User).count() > 0:
-                print("ℹ️  База данных уже содержит данные")
+            user_count = db.query(User).count()
+            event_count = db.query(Event).count()
+            
+            if user_count > 0 or event_count > 0:
+                print(f"ℹ️  База данных уже содержит данные (пользователей: {user_count}, мероприятий: {event_count})")
                 return
             
             print("📝 Создание начальных мероприятий...")
@@ -88,8 +100,13 @@ def create_production_data():
         finally:
             db.close()
             
+    except ImportError as e:
+        print(f"❌ Ошибка импорта модулей: {e}")
+        print("Убедитесь, что все зависимости установлены")
+        sys.exit(1)
     except Exception as e:
         print(f"❌ Критическая ошибка при инициализации: {e}")
+        print(f"Тип ошибки: {type(e).__name__}")
         sys.exit(1)
 
 if __name__ == "__main__":

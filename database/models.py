@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, BigInteger, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from config import Config
+import os
 
 Base = declarative_base()
 
@@ -64,13 +64,37 @@ class Registration(Base):
     def __repr__(self):
         return f"<Registration {self.id} - User {self.user_id} -> Event {self.event_id}>"
 
-# Создание engine и session
-engine = create_engine(Config.DATABASE_URL)
+def get_database_url():
+    """Получение URL базы данных с обработкой Heroku"""
+    database_url = os.getenv('DATABASE_URL')
+    
+    if not database_url:
+        # Локальная разработка - используем SQLite
+        return 'sqlite:///./test.db'
+    
+    # Heroku предоставляет URL в формате postgres://, но SQLAlchemy 1.4+ требует postgresql://
+    if database_url.startswith('postgres://'):
+        database_url = database_url.replace('postgres://', 'postgresql://', 1)
+    
+    return database_url
+
+# Создание engine с правильной обработкой URL
+database_url = get_database_url()
+print(f"🔗 Подключение к базе данных: {database_url.split('@')[0]}@***")
+
+engine = create_engine(
+    database_url,
+    pool_pre_ping=True,  # Проверка соединения перед использованием
+    echo=False  # Отключаем логирование SQL в продакшне
+)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     """Инициализация базы данных"""
+    print("📋 Создание таблиц...")
     Base.metadata.create_all(bind=engine)
+    print("✅ Таблицы созданы успешно")
 
 def get_db():
     """Получение сессии базы данных"""
@@ -78,4 +102,4 @@ def get_db():
     try:
         yield db
     finally:
-        db.close() 
+        db.close()
