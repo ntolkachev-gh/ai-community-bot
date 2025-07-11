@@ -65,36 +65,52 @@ class Registration(Base):
         return f"<Registration {self.id} - User {self.user_id} -> Event {self.event_id}>"
 
 def get_database_url():
-    """Получение URL базы данных с обработкой Heroku"""
+    """Получение URL базы данных с правильной обработкой для Heroku"""
     database_url = os.getenv('DATABASE_URL')
     
     if not database_url:
         # Локальная разработка - используем SQLite
+        print("🔗 Локальная разработка: используем SQLite")
         return 'sqlite:///./test.db'
     
     # Heroku предоставляет URL в формате postgres://, но SQLAlchemy 1.4+ требует postgresql://
     if database_url.startswith('postgres://'):
         database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        print("🔗 Heroku PostgreSQL: конвертирован postgres:// -> postgresql://")
     
+    print(f"🔗 Подключение к базе данных: {database_url.split('@')[0]}@***")
     return database_url
 
 # Создание engine с правильной обработкой URL
 database_url = get_database_url()
-print(f"🔗 Подключение к базе данных: {database_url.split('@')[0]}@***")
 
-engine = create_engine(
-    database_url,
-    pool_pre_ping=True,  # Проверка соединения перед использованием
-    echo=False  # Отключаем логирование SQL в продакшне
-)
+# Настройки engine в зависимости от типа БД
+if database_url.startswith('sqlite'):
+    # SQLite настройки
+    engine = create_engine(
+        database_url,
+        echo=False
+    )
+else:
+    # PostgreSQL настройки для Heroku
+    engine = create_engine(
+        database_url,
+        pool_pre_ping=True,  # Проверка соединения перед использованием
+        pool_recycle=300,    # Переподключение каждые 5 минут
+        echo=False
+    )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 def init_db():
     """Инициализация базы данных"""
     print("📋 Создание таблиц...")
-    Base.metadata.create_all(bind=engine)
-    print("✅ Таблицы созданы успешно")
+    try:
+        Base.metadata.create_all(bind=engine)
+        print("✅ Таблицы созданы успешно")
+    except Exception as e:
+        print(f"❌ Ошибка создания таблиц: {e}")
+        raise
 
 def get_db():
     """Получение сессии базы данных"""
