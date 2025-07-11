@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 class TelegramBot:
     def __init__(self):
         self.bot_token = Config.BOT_TOKEN
+        if not self.bot_token:
+            raise ValueError("BOT_TOKEN не установлен в переменных окружения")
         self.app = Application.builder().token(self.bot_token).build()
         self.scheduler = NotificationScheduler(self.app.bot)
         self.setup_handlers()
@@ -287,5 +289,4 @@ class TelegramBot:
     def run(self):
         """Запуск бота"""
         logger.info("Запуск Telegram бота...")
-        self.scheduler.start()
         self.app.run_polling() 

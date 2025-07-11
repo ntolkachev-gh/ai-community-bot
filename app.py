@@ -21,8 +21,16 @@ logger = logging.getLogger(__name__)
 def run_bot():
     """Запуск Telegram бота"""
     try:
+        import asyncio
         bot = TelegramBot()
-        bot.run()
+        
+        # Создаем новый event loop для потока
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        
+        # Запускаем бота
+        bot.scheduler.start()
+        bot.app.run_polling()
     except Exception as e:
         logger.error(f"Ошибка запуска бота: {e}")
 
