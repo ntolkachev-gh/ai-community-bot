@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Мероприятия - AI Community CRM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-calendar-alt"></i> Мероприятия
+            </h1>
+            <a href="{{ url_for('new_event') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Создать мероприятие
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if events %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Название</th>
+                                    <th>Дата и время</th>
+                                    <th>Участники</th>
+                                    <th>Статус</th>
+                                    <th>Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for event in events %}
+                                <tr>
+                                    <td>
+                                        <div>
+                                            <strong>{{ event.title }}</strong>
+                                            {% if event.description %}
+                                                <br>
+                                                <small class="text-muted">
+                                                    {{ event.description[:100] }}{% if event.description|length > 100 %}...{% endif %}
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ event.event_datetime|datetime_format }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-users me-2"></i>
+                                            <span>{{ event.registrations|length }}/{{ event.max_participants }}</span>
+                                        </div>
+                                        <div class="progress mt-1" style="height: 5px;">
+                                            <div class="progress-bar" style="width: {{ (event.registrations|length / event.max_participants * 100) }}%"></div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if event.is_full %}
+                                            <span class="badge bg-danger">Заполнено</span>
+                                        {% elif event.event_datetime < now %}
+                                            <span class="badge bg-secondary">Завершено</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Активно</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('event_detail', event_id=event.id) }}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-eye"></i> Просмотр
+                                            </a>
+                                            <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-sm btn-outline-secondary">
+                                                <i class="fas fa-edit"></i> Изменить
+                                            </a>
+                                            <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" style="display: inline;" onsubmit="return confirm('Удалить мероприятие?')">
+                                                <button type="submit" class="btn btn-sm btn-outline-secondary">
+                                                    <i class="fas fa-trash"></i> Удалить
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-calendar-alt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Нет мероприятий</h5>
+                        <p class="text-muted">Создайте первое мероприятие</p>
+                        <a href="{{ url_for('new_event') }}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Создать мероприятие
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Главная - AI Community CRM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h4 class="mb-3">
+            <i class="fas fa-chart-line"></i> Панель управления
+        </h4>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="d-flex gap-2 mb-3 stats-container">
+    <div class="flex-fill">
+        <div class="card stats-card">
+            <div class="card-body text-center py-2 px-1">
+                <i class="fas fa-users mb-1"></i>
+                <h6 class="mb-0">{{ users_count }}</h6>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Пользователи</small>
+            </div>
+        </div>
+    </div>
+    <div class="flex-fill">
+        <div class="card stats-card">
+            <div class="card-body text-center py-2 px-1">
+                <i class="fas fa-calendar-alt mb-1"></i>
+                <h6 class="mb-0">{{ events_count }}</h6>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">События</small>
+            </div>
+        </div>
+    </div>
+    <div class="flex-fill">
+        <div class="card stats-card">
+            <div class="card-body text-center py-2 px-1">
+                <i class="fas fa-clipboard-list mb-1"></i>
+                <h6 class="mb-0">{{ registrations_count }}</h6>
+                <small class="text-muted d-block" style="font-size: 0.7rem;">Записи</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header py-2">
+                <h6 class="mb-0">
+                    <i class="fas fa-rocket"></i> Быстрые действия
+                </h6>
+            </div>
+            <div class="card-body py-3">
+                <div class="row g-2">
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('new_event') }}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center" style="height: 2.5rem;">
+                            <i class="fas fa-plus me-2"></i>
+                            <span class="d-none d-sm-inline">Создать мероприятие</span>
+                            <span class="d-sm-none">Создать</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('events') }}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center" style="height: 2.5rem;">
+                            <i class="fas fa-calendar-alt me-2"></i>
+                            <span class="d-none d-sm-inline">Все мероприятия</span>
+                            <span class="d-sm-none">События</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('users') }}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center" style="height: 2.5rem;">
+                            <i class="fas fa-users me-2"></i>
+                            <span>Пользователи</span>
+                        </a>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <a href="{{ url_for('registrations') }}" class="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center" style="height: 2.5rem;">
+                            <i class="fas fa-clipboard-list me-2"></i>
+                            <span class="d-none d-sm-inline">Регистрации</span>
+                            <span class="d-sm-none">Записи</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header py-2">
+                <h6 class="mb-0">
+                    <i class="fas fa-clock"></i> Последние регистрации
+                </h6>
+            </div>
+            <div class="card-body py-3">
+                {% if recent_registrations %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Пользователь</th>
+                                    <th>Мероприятие</th>
+                                    <th>Время регистрации</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for registration in recent_registrations %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-circle fa-lg text-secondary me-2"></i>
+                                            <div>
+                                                <strong>{{ registration.user.first_name }} {{ registration.user.last_name }}</strong>
+                                                <br>
+                                                <small class="text-muted">@{{ registration.user.username or 'N/A' }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <strong>{{ registration.event.title }}</strong>
+                                        <br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar"></i> {{ registration.event.event_datetime|datetime_format }}
+                                        </small>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            {{ registration.registration_time|datetime_format }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-inbox fa-2x text-muted mb-2"></i>
+                        <h6 class="text-muted">Нет регистраций</h6>
+                        <p class="text-muted small">Регистрации будут отображаться здесь</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

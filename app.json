@@ -1,0 +1,36 @@
+{
+  "name": "AI Community Bot",
+  "description": "Telegram bot for event management with CRM interface",
+  "keywords": ["telegram", "bot", "events", "crm", "postgresql"],
+  "repository": "https://github.com/yourusername/ai-community-bot",
+  "stack": "heroku-20",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "addons": [
+    {
+      "plan": "heroku-postgresql:hobby-dev"
+    }
+  ],
+  "env": {
+    "BOT_TOKEN": {
+      "description": "Telegram Bot Token from @BotFather",
+      "required": true
+    },
+    "SECRET_KEY": {
+      "description": "Secret key for Flask application",
+      "generator": "secret"
+    },
+    "FLASK_ENV": {
+      "value": "production"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "hobby"
+    }
+  }
+} 

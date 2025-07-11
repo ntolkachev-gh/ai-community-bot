@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Пользователи - AI Community CRM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1 class="mb-4">
+            <i class="fas fa-users"></i> Пользователи
+        </h1>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if users %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Пользователь</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Дата регистрации</th>
+                                    <th>Активность</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-circle fa-2x text-primary me-2"></i>
+                                            <div>
+                                                <strong>{{ user.first_name }} {{ user.last_name }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    Telegram ID: {{ user.telegram_id }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if user.username %}
+                                            <span class="badge bg-secondary">
+                                                @{{ user.username }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.email %}
+                                            <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+                                        {% else %}
+                                            <span class="text-muted">Не указан</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ user.registration_date|datetime_format }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-calendar-check me-2"></i>
+                                            <span>{{ user.registrations|length }} мероприятий</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Нет пользователей</h5>
+                        <p class="text-muted">Пользователи появятся после регистрации через бота</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

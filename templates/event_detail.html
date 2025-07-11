@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}{{ event.title }} - AI Community CRM{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-calendar-alt"></i> {{ event.title }}
+            </h1>
+            <div>
+                <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-edit"></i> Редактировать
+                </a>
+                <a href="{{ url_for('events') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Назад
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-info-circle"></i> Информация о мероприятии
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-calendar"></i> Дата и время</h6>
+                        <p class="text-muted">{{ event.event_datetime|datetime_format }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-users"></i> Участники</h6>
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold">{{ registrations|length }} / {{ event.max_participants }}</span>
+                                <span class="badge bg-primary">{{ (registrations|length / event.max_participants * 100)|int }}%</span>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar bg-primary progress-bar-striped progress-bar-animated" 
+                                    style="width: {{ (registrations|length / event.max_participants * 100) }}%"
+                                    role="progressbar" 
+                                    aria-valuenow="{{ (registrations|length / event.max_participants * 100)|int }}" 
+                                    aria-valuemin="0" 
+                                    aria-valuemax="100">
+                                </div>
+                            </div>
+                            <small class="text-muted mt-1 d-block">
+                                {% if event.available_spots > 0 %}
+                                    Свободно {{ event.available_spots }} мест
+                                {% else %}
+                                    Мест нет
+                                {% endif %}
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if event.description %}
+                <div class="row">
+                    <div class="col-12">
+                        <h6><i class="fas fa-file-alt"></i> Описание</h6>
+                        <p class="text-muted">{{ event.description }}</p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if event.webinar_link %}
+                <div class="row">
+                    <div class="col-12">
+                        <h6><i class="fas fa-link"></i> Ссылка на мероприятие</h6>
+                        <p><a href="{{ event.webinar_link }}" target="_blank" class="btn btn-outline-primary">
+                            <i class="fas fa-external-link-alt"></i> Перейти к мероприятию
+                        </a></p>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-chart-bar"></i> Статус</h6>
+                        {% if event.is_full %}
+                            <span class="badge bg-danger fs-6">Заполнено</span>
+                        {% elif event.event_datetime < now %}
+                            <span class="badge bg-secondary fs-6">Завершено</span>
+                        {% else %}
+                            <span class="badge bg-success fs-6">Активно</span>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <h6><i class="fas fa-chair"></i> Доступно мест</h6>
+                        <p class="text-muted">{{ event.available_spots }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-cog"></i> Действия
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{{ url_for('edit_event', event_id=event.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-edit"></i> Редактировать
+                    </a>
+                    <form method="POST" action="{{ url_for('delete_event', event_id=event.id) }}" onsubmit="return confirm('Вы уверены, что хотите удалить это мероприятие? Все регистрации будут также удалены.')">
+                        <button type="submit" class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-trash"></i> Удалить
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-users"></i> Зарегистрированные участники ({{ registrations|length }})
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if registrations %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Пользователь</th>
+                                    <th>Username</th>
+                                    <th>Время регистрации</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for registration in registrations %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="fas fa-user-circle fa-2x text-primary me-2"></i>
+                                            <div>
+                                                <strong>{{ registration.user.first_name }} {{ registration.user.last_name }}</strong>
+                                                <br>
+                                                <small class="text-muted">
+                                                    Telegram ID: {{ registration.user.telegram_id }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if registration.user.username %}
+                                            <span class="badge bg-secondary">
+                                                @{{ registration.user.username }}
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">
+                                            {{ registration.registration_time|datetime_format }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-plus fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Нет регистраций</h5>
+                        <p class="text-muted">Пользователи могут зарегистрироваться через Telegram бота</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
