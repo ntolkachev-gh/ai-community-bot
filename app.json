@@ -1,9 +1,9 @@
 {
   "name": "AI Community Bot",
-  "description": "Telegram bot for event management with CRM interface",
-  "keywords": ["telegram", "bot", "events", "crm", "postgresql"],
-  "repository": "https://github.com/yourusername/ai-community-bot",
-  "stack": "heroku-20",
+  "description": "Telegram bot for AI community event management with professional CRM interface",
+  "keywords": ["telegram", "bot", "events", "crm", "postgresql", "ai", "community", "machine-learning"],
+  "repository": "https://github.com/ntolkachev-gh/ai-community-bot",
+  "stack": "heroku-22",
   "buildpacks": [
     {
       "url": "heroku/python"
@@ -11,26 +11,32 @@
   ],
   "addons": [
     {
-      "plan": "heroku-postgresql:hobby-dev"
+      "plan": "heroku-postgresql:mini"
     }
   ],
   "env": {
     "BOT_TOKEN": {
-      "description": "Telegram Bot Token from @BotFather",
+      "description": "Telegram Bot Token from @BotFather (получите у @BotFather в Telegram)",
       "required": true
     },
     "SECRET_KEY": {
-      "description": "Secret key for Flask application",
+      "description": "Secret key for Flask application security",
       "generator": "secret"
     },
     "FLASK_ENV": {
       "value": "production"
+    },
+    "LOG_TO_STDOUT": {
+      "value": "true"
     }
   },
   "formation": {
     "web": {
       "quantity": 1,
-      "size": "hobby"
+      "size": "eco"
     }
+  },
+  "scripts": {
+    "postdeploy": "echo 'База данных инициализирована через release команду'"
   }
-} 
+}

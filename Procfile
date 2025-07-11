@@ -1,2 +1,2 @@
-release: python -c "from database.models import init_db; init_db()"
-web: python app.py 
+release: python init_production_db.py
+web: python app.py
