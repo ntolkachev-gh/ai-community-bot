@@ -4,7 +4,6 @@ Telegram Bot Worker - отдельный процесс для бота
 """
 
 import logging
-import asyncio
 import os
 from database.models import init_db
 from bot.telegram_bot import TelegramBot
@@ -16,7 +15,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-async def main():
+def main():
     """Главная функция для запуска бота"""
     try:
         logger.info("Инициализация базы данных для бота...")
@@ -33,7 +32,7 @@ async def main():
         # Запуск планировщика
         bot.scheduler.start()
         
-        # Запуск бота
+        # Запуск бота (run_polling создает свой event loop)
         bot.app.run_polling()
         
     except Exception as e:
@@ -41,4 +40,4 @@ async def main():
         raise
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    main() 
