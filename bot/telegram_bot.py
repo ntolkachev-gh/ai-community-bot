@@ -104,18 +104,24 @@ class TelegramBot:
                 spots_left = event.available_spots
                 
                 message += f"📅 {event.title}\n"
-                message += f"📝 {event.description[:100]}{'...' if len(event.description) > 100 else ''}\n"
+                # Увеличиваем лимит до 300 символов и улучшаем форматирование
+                if len(event.description) > 300:
+                    # Обрезаем до 300 символов и добавляем многоточие
+                    description = event.description[:300].rsplit(' ', 1)[0] + '...'
+                else:
+                    description = event.description
+                message += f"📝 {description}\n"
                 message += f"🕐 {event_date}\n"
                 message += f"👥 Свободных мест: {spots_left}\n\n"
                 
                 if not event.is_full:
                     keyboard.append([InlineKeyboardButton(
-                        f"Записаться на '{event.title[:30]}...'",
+                        f"Записаться на '{event.title[:40]}...'" if len(event.title) > 40 else f"Записаться на '{event.title}'",
                         callback_data=f"register_{event.id}"
                     )])
                 else:
                     keyboard.append([InlineKeyboardButton(
-                        f"'{event.title[:30]}...' - ЗАПОЛНЕНО",
+                        f"'{event.title[:40]}...' - ЗАПОЛНЕНО" if len(event.title) > 40 else f"'{event.title}' - ЗАПОЛНЕНО",
                         callback_data=f"full_{event.id}"
                     )])
             
@@ -162,7 +168,7 @@ class TelegramBot:
                 message += f"✅ Зарегистрирован: {reg_date}\n\n"
                 
                 keyboard.append([InlineKeyboardButton(
-                    f"Отменить '{event.title[:30]}...'",
+                    f"Отменить '{event.title[:40]}...'" if len(event.title) > 40 else f"Отменить '{event.title}'",
                     callback_data=f"cancel_{reg.id}"
                 )])
             
