@@ -108,8 +108,23 @@ class RegistrationFlow:
     def process_ai_experience_callback(self, user_id: int, callback_data: str) -> tuple[str, InlineKeyboardMarkup]:
         """Обработка выбора опыта с ИИ через callback"""
         try:
-            ai_exp_option = callback_data.split('_')[2]  # ai_exp_OPTION_NAME
-            option = AIExperienceOption[ai_exp_option]
+            # callback_data имеет формат "ai_exp_OPTION_NAME"
+            if not callback_data.startswith("ai_exp_"):
+                raise ValueError(f"Неверный формат callback_data: {callback_data}")
+            
+            # Убираем префикс "ai_exp_" и получаем полное имя опции
+            ai_exp_option = callback_data[7:]  # Убираем "ai_exp_"
+            
+            # Ищем соответствующую опцию
+            option = None
+            for exp_option in AIExperienceOption:
+                if exp_option.name == ai_exp_option:
+                    option = exp_option
+                    break
+            
+            if option is None:
+                raise ValueError(f"Неизвестная опция: {ai_exp_option}")
+            
             self.user_states[user_id]['data']['ai_experience'] = option.value
             self.user_states[user_id]['step'] = RegistrationStep.EMAIL
             
@@ -122,9 +137,9 @@ class RegistrationFlow:
             
             return message, None
             
-        except (KeyError, IndexError) as e:
+        except (KeyError, IndexError, ValueError) as e:
             print(f"Ошибка обработки callback: {callback_data}, ошибка: {e}")
-            return "Ошибка обработки выбора", None
+            return "Ошибка обработки выбора. Попробуйте еще раз.", None
     
     def _process_email(self, user_id: int, text: str) -> tuple[str, InlineKeyboardMarkup]:
         """Обработка ввода email"""
