@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from database.models import User, Event, Registration, get_db
 from config import Config
 from bot.scheduler import NotificationScheduler
+from bot.registration_flow import RegistrationFlow
 
 logger = logging.getLogger(__name__)
 
@@ -16,6 +17,7 @@ class TelegramBot:
             raise ValueError("BOT_TOKEN не установлен в переменных окружения")
         self.app = Application.builder().token(self.bot_token).build()
         self.scheduler = NotificationScheduler(self.app.bot)
+        self.registration_flow = RegistrationFlow()
         self.setup_handlers()
         
     def setup_handlers(self):
@@ -25,6 +27,7 @@ class TelegramBot:
         self.app.add_handler(CommandHandler("events", self.events_command))
         self.app.add_handler(CommandHandler("my_events", self.my_events_command))
         self.app.add_handler(CommandHandler("help", self.help_command))
+        self.app.add_handler(CommandHandler("profile", self.profile_command))
         
         # Callback handlers
         self.app.add_handler(CallbackQueryHandler(self.button_handler))
@@ -37,45 +40,55 @@ class TelegramBot:
         user = update.effective_user
         chat_id = update.effective_chat.id
         
-        # Регистрация пользователя
+        # Проверяем, зарегистрирован ли пользователь
         db = next(get_db())
         try:
             existing_user = db.query(User).filter(User.telegram_id == user.id).first()
             
             if not existing_user:
-                new_user = User(
-                    telegram_id=user.id,
-                    username=user.username,
-                    first_name=user.first_name,
-                    last_name=user.last_name
-                )
-                db.add(new_user)
-                db.commit()
-                
-                message = f"Добро пожаловать, {user.first_name}! 🎉\n\n"
-                message += "Вы успешно зарегистрированы в системе управления мероприятиями AI Community.\n\n"
-                message += "Доступные команды:\n"
-                message += "/events - Просмотр доступных мероприятий\n"
-                message += "/my_events - Мои регистрации\n"
-                message += "/help - Помощь"
-                
+                # Начинаем процесс регистрации
+                message, reply_markup = self.registration_flow.start_registration(user.id)
+                await update.message.reply_text(message, reply_markup=reply_markup)
             else:
-                message = f"С возвращением, {user.first_name}! 😊\n\n"
-                message += "Вы уже зарегистрированы в системе.\n\n"
-                message += "Используйте /events для просмотра мероприятий."
+                if existing_user.is_profile_complete:
+                    message = f"С возвращением, {existing_user.full_name or user.first_name}! 😊\n\n"
+                    message += "Вы уже зарегистрированы в системе.\n\n"
+                    message += "Используйте /events для просмотра мероприятий."
+                else:
+                    # Пользователь есть, но профиль не завершен
+                    message = "Добро пожаловать обратно! 👋\n\n"
+                    message += "Ваша регистрация не была завершена. Давайте продолжим:\n\n"
+                    message += "Как вас зовут? (полное имя)"
+                    self.registration_flow.user_states[user.id] = {
+                        'step': self.registration_flow.RegistrationStep.FULL_NAME,
+                        'data': {}
+                    }
+                
+                await update.message.reply_text(message)
                 
         except Exception as e:
-            logger.error(f"Ошибка при регистрации пользователя: {e}")
-            message = "Произошла ошибка при регистрации. Попробуйте позже."
+            logger.error(f"Ошибка при проверке пользователя: {e}")
+            message = "Произошла ошибка. Попробуйте позже."
+            await update.message.reply_text(message)
         finally:
             db.close()
-            
-        await update.message.reply_text(message)
     
     async def events_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Показать список доступных мероприятий"""
+        user = update.effective_user
         db = next(get_db())
+        
         try:
+            # Проверяем, зарегистрирован ли пользователь и завершен ли профиль
+            user_obj = db.query(User).filter(User.telegram_id == user.id).first()
+            if not user_obj:
+                await update.message.reply_text("Вы не зарегистрированы. Используйте /start")
+                return
+            
+            if not user_obj.is_profile_complete:
+                await update.message.reply_text("Ваш профиль не завершен. Используйте /start для завершения регистрации.")
+                return
+            
             # Получаем будущие мероприятия
             events = db.query(Event).filter(Event.event_datetime > datetime.utcnow()).all()
             
@@ -126,6 +139,10 @@ class TelegramBot:
                 await update.message.reply_text("Вы не зарегистрированы. Используйте /start")
                 return
             
+            if not user_obj.is_profile_complete:
+                await update.message.reply_text("Ваш профиль не завершен. Используйте /start для завершения регистрации.")
+                return
+            
             registrations = db.query(Registration).filter(Registration.user_id == user_obj.id).all()
             
             if not registrations:
@@ -165,16 +182,19 @@ class TelegramBot:
 
 Доступные команды:
 /start - Регистрация в системе
+/profile - Просмотр вашего профиля
 /events - Просмотр доступных мероприятий
 /my_events - Мои регистрации
 /help - Эта справка
 
 Как использовать:
 1. Начните с команды /start для регистрации
-2. Используйте /events для просмотра мероприятий
-3. Нажмите на кнопку "Записаться" для регистрации
-4. Проверьте свои регистрации через /my_events
-5. Отмените регистрацию при необходимости
+2. Заполните информацию о себе (имя, компания, роль, опыт с ИИ, email)
+3. Используйте /events для просмотра мероприятий
+4. Нажмите на кнопку "Записаться" для регистрации
+5. Проверьте свои регистрации через /my_events
+6. Отмените регистрацию при необходимости
+7. Просмотрите свой профиль через /profile
 
 За день до мероприятия вы получите напоминание!
         """
@@ -194,6 +214,8 @@ class TelegramBot:
             await self.handle_cancellation(query, user, data)
         elif data.startswith("full_"):
             await query.edit_message_text("Это мероприятие уже заполнено!")
+        elif data.startswith("ai_exp_"):
+            await self.handle_ai_experience_selection(query, user, data)
     
     async def handle_registration(self, query, user, data):
         """Обработка регистрации на мероприятие"""
@@ -279,12 +301,104 @@ class TelegramBot:
     
     async def handle_message(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Обработка текстовых сообщений"""
-        await update.message.reply_text(
-            "Используйте команды для взаимодействия с ботом:\n"
-            "/events - Просмотр мероприятий\n"
-            "/my_events - Мои регистрации\n"
-            "/help - Помощь"
-        )
+        user = update.effective_user
+        text = update.message.text
+        
+        # Проверяем, находится ли пользователь в процессе регистрации
+        if self.registration_flow.is_user_registering(user.id):
+            message, reply_markup = self.registration_flow.process_step(user.id, text)
+            
+            if self.registration_flow.is_registration_complete(user.id):
+                # Завершаем регистрацию в базе данных
+                await self.complete_registration(user)
+                self.registration_flow.clear_user_state(user.id)
+            
+            await update.message.reply_text(message, reply_markup=reply_markup)
+        else:
+            await update.message.reply_text(
+                "Используйте команды для взаимодействия с ботом:\n"
+                "/events - Просмотр мероприятий\n"
+                "/my_events - Мои регистрации\n"
+                "/help - Помощь"
+            )
+    
+    async def handle_ai_experience_selection(self, query, user, data):
+        """Обработка выбора опыта с ИИ"""
+        message, reply_markup = self.registration_flow.process_ai_experience_callback(user.id, data)
+        await query.edit_message_text(message, reply_markup=reply_markup)
+    
+    async def complete_registration(self, user):
+        """Завершение регистрации пользователя в базе данных"""
+        db = next(get_db())
+        try:
+            user_data = self.registration_flow.get_user_data(user.id)
+            
+            # Создаем или обновляем пользователя
+            existing_user = db.query(User).filter(User.telegram_id == user.id).first()
+            
+            if existing_user:
+                # Обновляем существующего пользователя
+                existing_user.full_name = user_data.get('full_name')
+                existing_user.company = user_data.get('company')
+                existing_user.role = user_data.get('role')
+                existing_user.ai_experience = user_data.get('ai_experience')
+                existing_user.email = user_data.get('email')
+                existing_user.is_profile_complete = 1
+            else:
+                # Создаем нового пользователя
+                new_user = User(
+                    telegram_id=user.id,
+                    username=user.username,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                    full_name=user_data.get('full_name'),
+                    company=user_data.get('company'),
+                    role=user_data.get('role'),
+                    ai_experience=user_data.get('ai_experience'),
+                    email=user_data.get('email'),
+                    is_profile_complete=1
+                )
+                db.add(new_user)
+            
+            db.commit()
+            logger.info(f"Пользователь {user.id} успешно зарегистрирован")
+            
+        except Exception as e:
+            logger.error(f"Ошибка при завершении регистрации: {e}")
+            db.rollback()
+        finally:
+            db.close()
+    
+    async def profile_command(self, update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Команда для просмотра профиля"""
+        user = update.effective_user
+        db = next(get_db())
+        
+        try:
+            user_obj = db.query(User).filter(User.telegram_id == user.id).first()
+            if not user_obj:
+                await update.message.reply_text("Вы не зарегистрированы. Используйте /start")
+                return
+            
+            if not user_obj.is_profile_complete:
+                await update.message.reply_text("Ваш профиль не завершен. Используйте /start для завершения регистрации.")
+                return
+            
+            message = "👤 Ваш профиль:\n\n"
+            message += f"📝 Имя: {user_obj.full_name}\n"
+            message += f"🏢 Компания: {user_obj.company}\n"
+            message += f"💼 Роль: {user_obj.role}\n"
+            message += f"🤖 Опыт с ИИ: {user_obj.ai_experience}\n"
+            message += f"📧 Email: {user_obj.email}\n"
+            message += f"📅 Дата регистрации: {user_obj.registration_date.strftime('%d.%m.%Y')}"
+            
+            await update.message.reply_text(message)
+            
+        except Exception as e:
+            logger.error(f"Ошибка при получении профиля: {e}")
+            await update.message.reply_text("Произошла ошибка при загрузке профиля.")
+        finally:
+            db.close()
     
     def run(self):
         """Запуск бота"""

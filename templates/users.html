@@ -21,9 +21,11 @@
                             <thead>
                                 <tr>
                                     <th>Пользователь</th>
-                                    <th>Username</th>
+                                    <th>Компания & Роль</th>
+                                    <th>Опыт с ИИ</th>
                                     <th>Email</th>
                                     <th>Дата регистрации</th>
+                                    <th>Статус</th>
                                     <th>Активность</th>
                                 </tr>
                             </thead>
@@ -34,21 +36,35 @@
                                         <div class="d-flex align-items-center">
                                             <i class="fas fa-user-circle fa-2x text-primary me-2"></i>
                                             <div>
-                                                <strong>{{ user.first_name }} {{ user.last_name }}</strong>
+                                                <strong>{{ user.full_name or (user.first_name + ' ' + user.last_name) }}</strong>
                                                 <br>
                                                 <small class="text-muted">
                                                     Telegram ID: {{ user.telegram_id }}
+                                                    {% if user.username %}
+                                                        <br>@{{ user.username }}
+                                                    {% endif %}
                                                 </small>
                                             </div>
                                         </div>
                                     </td>
                                     <td>
-                                        {% if user.username %}
-                                            <span class="badge bg-secondary">
-                                                @{{ user.username }}
-                                            </span>
+                                        {% if user.company and user.role %}
+                                            <div>
+                                                <strong>{{ user.company }}</strong>
+                                                <br>
+                                                <small class="text-muted">{{ user.role }}</small>
+                                            </div>
+                                        {% elif user.company %}
+                                            <span class="text-muted">{{ user.company }}</span>
                                         {% else %}
-                                            <span class="text-muted">N/A</span>
+                                            <span class="text-muted">Не указано</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if user.ai_experience %}
+                                            <span class="badge bg-success">{{ user.ai_experience }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Не указано</span>
                                         {% endif %}
                                     </td>
                                     <td>
@@ -62,6 +78,17 @@
                                         <span class="badge bg-info">
                                             {{ user.registration_date|datetime_format }}
                                         </span>
+                                    </td>
+                                    <td>
+                                        {% if user.is_profile_complete %}
+                                            <span class="badge bg-success">
+                                                <i class="fas fa-check"></i> Завершен
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning">
+                                                <i class="fas fa-clock"></i> Незавершен
+                                            </span>
+                                        {% endif %}
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center">

@@ -17,6 +17,13 @@ class User(Base):
     email = Column(String(255), nullable=True)
     registration_date = Column(DateTime, default=datetime.utcnow)
     
+    # Новые поля для расширенной информации
+    full_name = Column(String(200), nullable=True)  # Полное имя
+    company = Column(String(200), nullable=True)    # Компания
+    role = Column(String(200), nullable=True)       # Роль в компании
+    ai_experience = Column(String(100), nullable=True)  # Опыт с ИИ
+    is_profile_complete = Column(Integer, default=0)  # Завершен ли профиль (0/1)
+    
     # Связь с регистрациями
     registrations = relationship("Registration", back_populates="user")
     

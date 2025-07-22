@@ -17,6 +17,7 @@ def create_app():
         db = next(get_db())
         try:
             users_count = db.query(User).count()
+            completed_profiles_count = db.query(User).filter(User.is_profile_complete == 1).count()
             events_count = db.query(Event).count()
             registrations_count = db.query(Registration).count()
             
@@ -27,6 +28,7 @@ def create_app():
             
             return render_template('index.html', 
                                  users_count=users_count,
+                                 completed_profiles_count=completed_profiles_count,
                                  events_count=events_count,
                                  registrations_count=registrations_count,
                                  recent_registrations=recent_registrations)
