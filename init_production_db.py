@@ -27,6 +27,15 @@ def create_production_data():
         # Инициализация таблиц
         init_db()
         
+        # Запускаем миграцию для добавления новых полей
+        print("🔄 Запуск миграции базы данных...")
+        from migrate_database import migrate_database
+        migration_success = migrate_database()
+        
+        if not migration_success:
+            print("❌ Ошибка миграции базы данных")
+            sys.exit(1)
+        
         db = SessionLocal()
         
         try:

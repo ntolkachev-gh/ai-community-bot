@@ -2,6 +2,7 @@
 """
 Скрипт для миграции базы данных
 Добавляет новые поля в таблицу users для расширенной регистрации
+Поддерживает SQLite и PostgreSQL
 """
 
 import os
@@ -18,12 +19,23 @@ def migrate_database():
         database_url = get_database_url()
         print(f"📋 Подключение к: {database_url.split('@')[0]}@***")
         
-        # Проверяем, существует ли таблица users
+        # Определяем тип базы данных
+        is_postgresql = database_url.startswith('postgresql')
+        print(f"🗄️ Тип БД: {'PostgreSQL' if is_postgresql else 'SQLite'}")
+        
         with engine.connect() as conn:
-            result = conn.execute(text("""
-                SELECT name FROM sqlite_master 
-                WHERE type='table' AND name='users'
-            """))
+            # Проверяем, существует ли таблица users
+            if is_postgresql:
+                result = conn.execute(text("""
+                    SELECT table_name FROM information_schema.tables 
+                    WHERE table_schema = 'public' AND table_name = 'users'
+                """))
+            else:
+                result = conn.execute(text("""
+                    SELECT name FROM sqlite_master 
+                    WHERE type='table' AND name='users'
+                """))
+            
             table_exists = result.fetchone() is not None
             
             if not table_exists:
@@ -31,8 +43,15 @@ def migrate_database():
                 return False
             
             # Проверяем, существуют ли уже новые поля
-            result = conn.execute(text("PRAGMA table_info(users)"))
-            columns = [row[1] for row in result.fetchall()]
+            if is_postgresql:
+                result = conn.execute(text("""
+                    SELECT column_name FROM information_schema.columns 
+                    WHERE table_name = 'users' AND table_schema = 'public'
+                """))
+                columns = [row[0] for row in result.fetchall()]
+            else:
+                result = conn.execute(text("PRAGMA table_info(users)"))
+                columns = [row[1] for row in result.fetchall()]  # SQLite возвращает имя колонки во втором элементе
             
             new_columns = [
                 ('full_name', 'VARCHAR(200)'),
@@ -46,7 +65,19 @@ def migrate_database():
             for column_name, column_type in new_columns:
                 if column_name not in columns:
                     print(f"➕ Добавляем колонку: {column_name}")
-                    conn.execute(text(f"ALTER TABLE users ADD COLUMN {column_name} {column_type}"))
+                    
+                    if is_postgresql:
+                        # PostgreSQL синтаксис
+                        if column_type.startswith('INTEGER'):
+                            # Для PostgreSQL используем INTEGER
+                            sql = f"ALTER TABLE users ADD COLUMN {column_name} INTEGER DEFAULT 0"
+                        else:
+                            sql = f"ALTER TABLE users ADD COLUMN {column_name} {column_type}"
+                    else:
+                        # SQLite синтаксис
+                        sql = f"ALTER TABLE users ADD COLUMN {column_name} {column_type}"
+                    
+                    conn.execute(text(sql))
                     added_columns.append(column_name)
                 else:
                     print(f"✅ Колонка {column_name} уже существует")
@@ -55,21 +86,36 @@ def migrate_database():
             if added_columns:
                 print("🔄 Обновляем существующих пользователей...")
                 
-                # Устанавливаем is_profile_complete = 0 для всех существующих пользователей
-                conn.execute(text("UPDATE users SET is_profile_complete = 0 WHERE is_profile_complete IS NULL"))
-                
-                # Устанавливаем full_name для пользователей, у которых его нет
-                conn.execute(text("""
-                    UPDATE users 
-                    SET full_name = CASE 
-                        WHEN first_name IS NOT NULL AND last_name IS NOT NULL 
-                        THEN first_name || ' ' || last_name
-                        WHEN first_name IS NOT NULL 
-                        THEN first_name
-                        ELSE NULL
-                    END
-                    WHERE full_name IS NULL
-                """))
+                if is_postgresql:
+                    # PostgreSQL синтаксис
+                    conn.execute(text("UPDATE users SET is_profile_complete = 0 WHERE is_profile_complete IS NULL"))
+                    
+                    conn.execute(text("""
+                        UPDATE users 
+                        SET full_name = CASE 
+                            WHEN first_name IS NOT NULL AND last_name IS NOT NULL 
+                            THEN first_name || ' ' || last_name
+                            WHEN first_name IS NOT NULL 
+                            THEN first_name
+                            ELSE NULL
+                        END
+                        WHERE full_name IS NULL
+                    """))
+                else:
+                    # SQLite синтаксис
+                    conn.execute(text("UPDATE users SET is_profile_complete = 0 WHERE is_profile_complete IS NULL"))
+                    
+                    conn.execute(text("""
+                        UPDATE users 
+                        SET full_name = CASE 
+                            WHEN first_name IS NOT NULL AND last_name IS NOT NULL 
+                            THEN first_name || ' ' || last_name
+                            WHEN first_name IS NOT NULL 
+                            THEN first_name
+                            ELSE NULL
+                        END
+                        WHERE full_name IS NULL
+                    """))
                 
                 conn.commit()
                 print(f"✅ Добавлено колонок: {len(added_columns)}")

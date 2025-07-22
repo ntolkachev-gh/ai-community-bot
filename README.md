@@ -79,6 +79,9 @@ python seed_data.py
 # Выполните миграцию базы данных (если нужно)
 python migrate_database.py
 
+# Для Heroku (если нужно обновить существующую базу):
+# heroku run python heroku_migrate.py
+
 # Запустите веб-интерфейс
 python run_web_only.py
 ```
