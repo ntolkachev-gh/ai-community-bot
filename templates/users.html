@@ -17,25 +17,62 @@
             <div class="card-body">
                 {% if users %}
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <style>
+                            .users-table {
+                                min-width: 1200px;
+                            }
+                            .users-table th,
+                            .users-table td {
+                                white-space: nowrap;
+                                padding: 12px 15px;
+                            }
+                            .users-table .name-col {
+                                min-width: 180px;
+                            }
+                            .users-table .telegram-col {
+                                min-width: 200px;
+                            }
+                            .users-table .date-col {
+                                min-width: 140px;
+                            }
+                            .users-table .company-col {
+                                min-width: 150px;
+                            }
+                            .users-table .role-col {
+                                min-width: 160px;
+                            }
+                            .users-table .ai-exp-col {
+                                min-width: 200px;
+                            }
+                            .users-table .email-col {
+                                min-width: 220px;
+                            }
+                            .users-table .status-col {
+                                min-width: 120px;
+                            }
+                            .users-table .activity-col {
+                                min-width: 100px;
+                            }
+                        </style>
+                        <table class="table table-striped users-table">
                             <thead>
                                 <tr>
-                                    <th>Имя</th>
-                                    <th>Telegram</th>
-                                    <th>Дата регистрации</th>
-                                    <th>Компания</th>
-                                    <th>Роль</th>
-                                    <th>Опыт с ИИ</th>
-                                    <th>Email</th>
-                                    <th>Статус</th>
-                                    <th>Активность</th>
+                                    <th class="name-col">Имя</th>
+                                    <th class="telegram-col">Telegram</th>
+                                    <th class="date-col">Дата регистрации</th>
+                                    <th class="company-col">Компания</th>
+                                    <th class="role-col">Роль</th>
+                                    <th class="ai-exp-col">Опыт с ИИ</th>
+                                    <th class="email-col">Email</th>
+                                    <th class="status-col">Статус</th>
+                                    <th class="activity-col">Активность</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for user in users %}
                                 <tr>
                                     <!-- Имя -->
-                                    <td>
+                                    <td class="name-col">
                                         <div class="d-flex align-items-center">
                                             <i class="fas fa-user-circle fa-lg text-primary me-2"></i>
                                             <strong>{{ user.full_name or (user.first_name + ' ' + user.last_name) or 'Не указано' }}</strong>
@@ -43,7 +80,7 @@
                                     </td>
                                     
                                     <!-- Telegram -->
-                                    <td>
+                                    <td class="telegram-col">
                                         <div>
                                             <small class="text-muted d-block">ID: {{ user.telegram_id }}</small>
                                             {% if user.username %}
@@ -55,14 +92,14 @@
                                     </td>
                                     
                                     <!-- Дата регистрации -->
-                                    <td>
+                                    <td class="date-col">
                                         <span class="badge bg-info">
                                             {{ user.registration_date|datetime_format }}
                                         </span>
                                     </td>
                                     
                                     <!-- Компания -->
-                                    <td>
+                                    <td class="company-col">
                                         {% if user.company %}
                                             <strong>{{ user.company }}</strong>
                                         {% else %}
@@ -71,7 +108,7 @@
                                     </td>
                                     
                                     <!-- Роль -->
-                                    <td>
+                                    <td class="role-col">
                                         {% if user.role %}
                                             <span class="badge bg-secondary">{{ user.role }}</span>
                                         {% else %}
@@ -80,7 +117,7 @@
                                     </td>
                                     
                                     <!-- Опыт с ИИ -->
-                                    <td>
+                                    <td class="ai-exp-col">
                                         {% if user.ai_experience %}
                                             <span class="badge bg-success">{{ user.ai_experience }}</span>
                                         {% else %}
@@ -89,7 +126,7 @@
                                     </td>
                                     
                                     <!-- Email -->
-                                    <td>
+                                    <td class="email-col">
                                         {% if user.email %}
                                             <a href="mailto:{{ user.email }}" class="text-decoration-none">
                                                 <i class="fas fa-envelope me-1"></i>{{ user.email }}
@@ -100,7 +137,7 @@
                                     </td>
                                     
                                     <!-- Статус -->
-                                    <td>
+                                    <td class="status-col">
                                         {% if user.is_profile_complete %}
                                             <span class="badge bg-success">
                                                 <i class="fas fa-check"></i> Завершен
@@ -113,8 +150,8 @@
                                     </td>
                                     
                                     <!-- Активность -->
-                                    <td>
-                                        <div class="d-flex align-items-center">
+                                    <td class="activity-col">
+                                        <div class="d-flex align-items-center justify-content-center">
                                             <i class="fas fa-calendar-check me-2 text-success"></i>
                                             <span>{{ user.registrations|length }}</span>
                                         </div>
