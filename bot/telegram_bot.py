@@ -170,35 +170,83 @@ class TelegramBot:
                 await update.message.reply_text("В данный момент нет доступных мероприятий.")
                 return
             
-            message = "🗓 **Доступные мероприятия:**\n\n"
-            keyboard = []
+            # Отправляем заголовочное сообщение
+            await update.message.reply_text("🗓 **Доступные мероприятия:**", parse_mode='Markdown')
             
+            # Отправляем каждое мероприятие отдельным сообщением
             for i, event in enumerate(events, 1):
                 # Конвертируем время в часовой пояс пользователя
                 event_date = convert_to_user_timezone(event.event_datetime, getattr(user_obj, 'timezone', 'UTC') or 'UTC')
                 spots_left = event.available_spots
                 
-                # Показываем только номер, название и дату
-                message += f"{i}. **{event.title}**\n"
-                message += f"🕐 {event_date}\n"
-                message += f"👥 Свободных мест: {spots_left}\n\n"
+                # Формируем сообщение для мероприятия
+                message = f"📅 **{event.title}**\n\n"
                 
-                # Создаем inline кнопку для каждого события
+                # Добавляем описание, если есть
+                if event.description:
+                    message += f"📝 {event.description}\n\n"
+                
+                message += f"🕐 **Дата и время:** {event_date}\n"
+                message += f"👥 **Свободных мест:** {spots_left}\n"
+                
+                # Добавляем ссылку на мероприятие, если есть
+                if event.webinar_link:
+                    message += f"🔗 **Ссылка:** [Присоединиться к мероприятию]({event.webinar_link})\n"
+                
+                # Генерируем ссылку на Google Calendar
+                calendar_link = generate_google_calendar_link(
+                    event_title=event.title,
+                    event_datetime=event.event_datetime,
+                    description=event.description or "",
+                    location=event.webinar_link or ""
+                )
+                
+                # Создаем кнопки для мероприятия
+                keyboard = []
+                
+                # Главная кнопка - регистрация
                 if not event.is_full:
-                    button_text = f"Записаться #{i}"
                     keyboard.append([InlineKeyboardButton(
-                        button_text,
+                        f"✅ Записаться на мероприятие",
                         callback_data=f"register_{event.id}"
                     )])
                 else:
-                    button_text = f"❌ ЗАПОЛНЕНО #{i}"
                     keyboard.append([InlineKeyboardButton(
-                        button_text,
+                        "❌ МЕРОПРИЯТИЕ ЗАПОЛНЕНО",
                         callback_data=f"full_{event.id}"
                     )])
-            
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await update.message.reply_text(message, reply_markup=reply_markup, parse_mode='Markdown')
+                
+                # Дополнительные кнопки
+                additional_buttons = []
+                
+                # Кнопка календаря
+                additional_buttons.append(InlineKeyboardButton(
+                    "📅 Добавить в календарь",
+                    url=calendar_link
+                ))
+                
+                # Кнопка ссылки на мероприятие (если есть)
+                if event.webinar_link:
+                    additional_buttons.append(InlineKeyboardButton(
+                        "🔗 Ссылка на мероприятие",
+                        url=event.webinar_link
+                    ))
+                
+                # Добавляем дополнительные кнопки (по 1-2 в ряд)
+                if len(additional_buttons) == 1:
+                    keyboard.append(additional_buttons)
+                else:
+                    keyboard.append(additional_buttons)
+                
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                # Отправляем сообщение для мероприятия
+                await update.message.reply_text(
+                    message, 
+                    reply_markup=reply_markup, 
+                    parse_mode='Markdown',
+                    disable_web_page_preview=True
+                )
             
         except Exception as e:
             logger.error(f"Ошибка при получении мероприятий: {e}")
