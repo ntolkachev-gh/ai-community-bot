@@ -175,7 +175,7 @@ class TelegramBot:
             
             for i, event in enumerate(events, 1):
                 # Конвертируем время в часовой пояс пользователя
-                event_date = convert_to_user_timezone(event.event_datetime, user_obj.timezone)
+                event_date = convert_to_user_timezone(event.event_datetime, getattr(user_obj, 'timezone', 'UTC') or 'UTC')
                 spots_left = event.available_spots
                 
                 # Показываем только номер, название и дату
@@ -240,7 +240,7 @@ class TelegramBot:
                     continue
                     
                 # Конвертируем время в часовой пояс пользователя
-                event_date = convert_to_user_timezone(event.event_datetime, user_obj.timezone)
+                event_date = convert_to_user_timezone(event.event_datetime, getattr(user_obj, 'timezone', 'UTC') or 'UTC')
                 reg_date = reg.registration_time.strftime("%d.%m.%Y %H:%M")
                 
                 message += f"📅 {event.title}\n"
@@ -379,7 +379,7 @@ class TelegramBot:
             message = f"✅ Вы успешно зарегистрированы на мероприятие!\n\n"
             message += f"📅 {event.title}\n"
             # Конвертируем время в часовой пояс пользователя
-            event_date = convert_to_user_timezone(event.event_datetime, user_obj.timezone)
+            event_date = convert_to_user_timezone(event.event_datetime, getattr(user_obj, 'timezone', 'UTC') or 'UTC')
             message += f"🕐 {event_date}\n"
             message += f"👥 Осталось мест: {event.available_spots - 1}\n"
             
@@ -838,7 +838,7 @@ class TelegramBot:
                     )
             else:
                 # Показываем текущий часовой пояс и кнопки для выбора
-                current_tz = user_obj.timezone or 'UTC'
+                current_tz = getattr(user_obj, 'timezone', 'UTC') or 'UTC' or 'UTC'
                 message = f"🕐 Ваш текущий часовой пояс: {current_tz}\n\n"
                 message += "Выберите новый часовой пояс:"
                 
