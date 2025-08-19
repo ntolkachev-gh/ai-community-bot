@@ -19,39 +19,65 @@
                     <div class="table-responsive">
                         <style>
                             .users-table {
-                                min-width: 1200px;
+                                min-width: 1600px;
+                                width: 100%;
+                                font-size: 14px;
                             }
                             .users-table th,
                             .users-table td {
                                 white-space: nowrap;
-                                padding: 12px 15px;
+                                padding: 15px 20px;
+                                vertical-align: middle;
                             }
                             .users-table .name-col {
-                                min-width: 180px;
+                                min-width: 200px;
+                                width: 15%;
                             }
                             .users-table .telegram-col {
-                                min-width: 200px;
+                                min-width: 250px;
+                                width: 18%;
                             }
                             .users-table .date-col {
-                                min-width: 140px;
+                                min-width: 160px;
+                                width: 12%;
                             }
                             .users-table .company-col {
-                                min-width: 150px;
+                                min-width: 180px;
+                                width: 15%;
                             }
                             .users-table .role-col {
-                                min-width: 160px;
+                                min-width: 180px;
+                                width: 15%;
                             }
                             .users-table .ai-exp-col {
-                                min-width: 200px;
+                                min-width: 250px;
+                                width: 20%;
                             }
                             .users-table .email-col {
-                                min-width: 220px;
+                                min-width: 250px;
+                                width: 18%;
                             }
                             .users-table .status-col {
-                                min-width: 120px;
+                                min-width: 130px;
+                                width: 10%;
+                                text-align: center;
                             }
                             .users-table .activity-col {
                                 min-width: 100px;
+                                width: 8%;
+                                text-align: center;
+                            }
+                            .table-responsive {
+                                overflow-x: auto;
+                                -webkit-overflow-scrolling: touch;
+                            }
+                            .users-table thead th {
+                                background-color: #f8f9fa;
+                                font-weight: 600;
+                                border-bottom: 2px solid #dee2e6;
+                                position: sticky;
+                                top: 0;
+                                z-index: 10;
                             }
                         </style>
                         <table class="table table-striped users-table">
@@ -152,8 +178,8 @@
                                     <!-- Активность -->
                                     <td class="activity-col">
                                         <div class="d-flex align-items-center justify-content-center">
-                                            <i class="fas fa-calendar-check me-2 text-success"></i>
-                                            <span>{{ user.registrations|length }}</span>
+                                            <i class="fas fa-calendar-check me-1 text-success"></i>
+                                            <span class="fw-bold">{{ user.registrations|length }}</span>
                                         </div>
                                     </td>
                                 </tr>
