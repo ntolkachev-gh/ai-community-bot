@@ -3,6 +3,8 @@
 {% block title %}Пользователи - AI Community CRM{% endblock %}
 
 {% block content %}
+</div>
+<!-- Закрываем контейнер из base.html чтобы выйти за его пределы -->
 <div class="container-fluid p-0">
     <div class="w-100 px-3 py-3">
         <h1 class="mb-4">
@@ -20,7 +22,7 @@
                         <style>
                             .users-table {
                                 min-width: 1200px;
-                                width: 100%;
+                                width: 100vw;
                                 font-size: 14px;
                                 margin-bottom: 0;
                                 table-layout: auto;
@@ -102,6 +104,16 @@
                             }
                             body {
                                 overflow-x: auto;
+                            }
+                            
+                            /* Полное переопределение контейнеров */
+                            .container-fluid.p-0 {
+                                max-width: 100vw !important;
+                                width: 100vw !important;
+                                margin-left: 0 !important;
+                                margin-right: 0 !important;
+                                padding-left: 0 !important;
+                                padding-right: 0 !important;
                             }
                             
                             /* Адаптивные стили для разных размеров экранов */
@@ -337,4 +349,6 @@
         </div>
     </div>
 </div>
+<div class="container mt-4">
+<!-- Открываем контейнер обратно для base.html -->
 {% endblock %} 
