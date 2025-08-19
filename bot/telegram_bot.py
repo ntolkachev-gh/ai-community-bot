@@ -241,12 +241,22 @@ class TelegramBot:
                 reply_markup = InlineKeyboardMarkup(keyboard)
                 
                 # Отправляем сообщение для мероприятия
-                await update.message.reply_text(
-                    message, 
-                    reply_markup=reply_markup, 
-                    parse_mode='Markdown',
-                    disable_web_page_preview=True
-                )
+                if event.image_url:
+                    # Если есть изображение, отправляем фото с подписью
+                    await update.message.reply_photo(
+                        photo=event.image_url,
+                        caption=message,
+                        reply_markup=reply_markup,
+                        parse_mode='Markdown'
+                    )
+                else:
+                    # Если нет изображения, отправляем обычное текстовое сообщение
+                    await update.message.reply_text(
+                        message, 
+                        reply_markup=reply_markup, 
+                        parse_mode='Markdown',
+                        disable_web_page_preview=True
+                    )
             
         except Exception as e:
             logger.error(f"Ошибка при получении мероприятий: {e}")
@@ -279,9 +289,10 @@ class TelegramBot:
                 await update.message.reply_text("У вас нет активных регистраций на мероприятия.")
                 return
             
-            message = "📋 Ваши регистрации:\n\n"
-            keyboard = []
+            # Отправляем заголовочное сообщение
+            await update.message.reply_text("📋 **Ваши регистрации:**", parse_mode='Markdown')
             
+            # Отправляем каждое мероприятие отдельным сообщением
             for reg in registrations:
                 event = reg.event
                 if not event:  # Проверяем, что мероприятие существует
@@ -291,15 +302,19 @@ class TelegramBot:
                 event_date = convert_to_user_timezone(event.event_datetime, getattr(user_obj, 'timezone', 'UTC') or 'UTC')
                 reg_date = reg.registration_time.strftime("%d.%m.%Y %H:%M")
                 
-                message += f"📅 {event.title}\n"
-                message += f"🕐 {event_date}\n"
-                message += f"✅ Зарегистрирован: {reg_date}\n"
+                # Формируем сообщение для мероприятия
+                message = f"📅 **{event.title}**\n\n"
                 
-                # Добавляем ссылку на мероприятие, если она есть
+                # Добавляем описание, если есть
+                if event.description:
+                    message += f"📝 {event.description}\n\n"
+                
+                message += f"🕐 **Дата и время:** {event_date}\n"
+                message += f"✅ **Зарегистрирован:** {reg_date}\n"
+                
+                # Добавляем ссылку на мероприятие, если есть
                 if event.webinar_link:
-                    message += f"🔗 {event.webinar_link}\n"
-                
-                message += "\n"
+                    message += f"🔗 **Ссылка:** [Присоединиться к мероприятию]({event.webinar_link})\n"
                 
                 # Генерируем ссылку на Google Calendar для кнопки
                 calendar_link = generate_google_calendar_link(
@@ -309,7 +324,10 @@ class TelegramBot:
                     location=event.webinar_link or ""
                 )
                 
-                # Создаем кнопки для каждого мероприятия
+                # Создаем кнопки для мероприятия
+                keyboard = []
+                
+                # Дополнительные кнопки
                 event_buttons = []
                 
                 # Кнопка "Добавить в календарь"
@@ -318,15 +336,40 @@ class TelegramBot:
                     url=calendar_link
                 ))
                 
-                event_buttons.append(InlineKeyboardButton(
-                    "Отменить",
-                    callback_data=f"cancel_{reg.id}"
-                ))
+                # Кнопка ссылки на мероприятие (если есть)
+                if event.webinar_link:
+                    event_buttons.append(InlineKeyboardButton(
+                        "🔗 Ссылка на мероприятие",
+                        url=event.webinar_link
+                    ))
                 
                 keyboard.append(event_buttons)
-            
-            reply_markup = InlineKeyboardMarkup(keyboard)
-            await update.message.reply_text(message, reply_markup=reply_markup)
+                
+                # Кнопка отмены регистрации
+                keyboard.append([InlineKeyboardButton(
+                    "❌ Отменить регистрацию",
+                    callback_data=f"cancel_{reg.id}"
+                )])
+                
+                reply_markup = InlineKeyboardMarkup(keyboard)
+                
+                # Отправляем сообщение для мероприятия
+                if event.image_url:
+                    # Если есть изображение, отправляем фото с подписью
+                    await update.message.reply_photo(
+                        photo=event.image_url,
+                        caption=message,
+                        reply_markup=reply_markup,
+                        parse_mode='Markdown'
+                    )
+                else:
+                    # Если нет изображения, отправляем обычное текстовое сообщение
+                    await update.message.reply_text(
+                        message, 
+                        reply_markup=reply_markup, 
+                        parse_mode='Markdown',
+                        disable_web_page_preview=True
+                    )
             
         except Exception as e:
             logger.error(f"Ошибка при получении регистраций: {e}")

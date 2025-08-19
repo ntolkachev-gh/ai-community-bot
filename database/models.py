@@ -3,6 +3,7 @@ from sqlalchemy import create_engine, Column, Integer, String, DateTime, Text, B
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 import os
+from config import Config
 
 Base = declarative_base()
 
@@ -23,6 +24,7 @@ class User(Base):
     role = Column(String(200), nullable=True)       # Роль в компании
     ai_experience = Column(String(100), nullable=True)  # Опыт с ИИ
     is_profile_complete = Column(Integer, default=0)  # Завершен ли профиль (0/1)
+    timezone = Column(String(50), nullable=True, default='UTC')  # Часовой пояс пользователя
     
     # Связь с регистрациями
     registrations = relationship("Registration", back_populates="user")
@@ -39,6 +41,7 @@ class Event(Base):
     event_datetime = Column(DateTime, nullable=False)
     webinar_link = Column(String(500), nullable=True)
     max_participants = Column(Integer, default=100)
+    image_url = Column(String(500), nullable=True)  # URL изображения мероприятия
     
     # Связь с регистрациями
     registrations = relationship("Registration", back_populates="event")
@@ -73,9 +76,9 @@ class Registration(Base):
 
 def get_database_url():
     """Получение URL базы данных с правильной обработкой для Heroku"""
-    database_url = os.getenv('DATABASE_URL')
+    database_url = Config.DATABASE_URL
     
-    if not database_url:
+    if not database_url or database_url == 'sqlite:///./test.db':
         # Локальная разработка - используем SQLite
         print("🔗 Локальная разработка: используем SQLite")
         return 'sqlite:///./test.db'

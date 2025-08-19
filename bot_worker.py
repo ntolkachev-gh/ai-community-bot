@@ -5,6 +5,7 @@ Telegram Bot Worker - отдельный процесс для бота
 
 import logging
 import os
+from config import Config
 from database.models import init_db
 from bot.telegram_bot import TelegramBot
 
@@ -21,7 +22,7 @@ def main():
         logger.info("Инициализация базы данных для бота...")
         init_db()
         
-        bot_token = os.getenv('BOT_TOKEN')
+        bot_token = Config.BOT_TOKEN
         if not bot_token:
             logger.error("BOT_TOKEN не найден в переменных окружения")
             return
