@@ -20,11 +20,13 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Пользователь</th>
-                                    <th>Компания & Роль</th>
+                                    <th>Имя</th>
+                                    <th>Telegram</th>
+                                    <th>Дата регистрации</th>
+                                    <th>Компания</th>
+                                    <th>Роль</th>
                                     <th>Опыт с ИИ</th>
                                     <th>Email</th>
-                                    <th>Дата регистрации</th>
                                     <th>Статус</th>
                                     <th>Активность</th>
                                 </tr>
@@ -32,34 +34,52 @@
                             <tbody>
                                 {% for user in users %}
                                 <tr>
+                                    <!-- Имя -->
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <i class="fas fa-user-circle fa-2x text-primary me-2"></i>
-                                            <div>
-                                                <strong>{{ user.full_name or (user.first_name + ' ' + user.last_name) }}</strong>
-                                                <br>
-                                                <small class="text-muted">
-                                                    Telegram ID: {{ user.telegram_id }}
-                                                    {% if user.username %}
-                                                        <br>@{{ user.username }}
-                                                    {% endif %}
-                                                </small>
-                                            </div>
+                                            <i class="fas fa-user-circle fa-lg text-primary me-2"></i>
+                                            <strong>{{ user.full_name or (user.first_name + ' ' + user.last_name) or 'Не указано' }}</strong>
                                         </div>
                                     </td>
+                                    
+                                    <!-- Telegram -->
                                     <td>
-                                        {% if user.company and user.role %}
-                                            <div>
-                                                <strong>{{ user.company }}</strong>
-                                                <br>
-                                                <small class="text-muted">{{ user.role }}</small>
-                                            </div>
-                                        {% elif user.company %}
-                                            <span class="text-muted">{{ user.company }}</span>
+                                        <div>
+                                            <small class="text-muted d-block">ID: {{ user.telegram_id }}</small>
+                                            {% if user.username %}
+                                                <span class="badge bg-primary">@{{ user.username }}</span>
+                                            {% else %}
+                                                <span class="text-muted">Нет username</span>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                    
+                                    <!-- Дата регистрации -->
+                                    <td>
+                                        <span class="badge bg-info">
+                                            {{ user.registration_date|datetime_format }}
+                                        </span>
+                                    </td>
+                                    
+                                    <!-- Компания -->
+                                    <td>
+                                        {% if user.company %}
+                                            <strong>{{ user.company }}</strong>
                                         {% else %}
                                             <span class="text-muted">Не указано</span>
                                         {% endif %}
                                     </td>
+                                    
+                                    <!-- Роль -->
+                                    <td>
+                                        {% if user.role %}
+                                            <span class="badge bg-secondary">{{ user.role }}</span>
+                                        {% else %}
+                                            <span class="text-muted">Не указано</span>
+                                        {% endif %}
+                                    </td>
+                                    
+                                    <!-- Опыт с ИИ -->
                                     <td>
                                         {% if user.ai_experience %}
                                             <span class="badge bg-success">{{ user.ai_experience }}</span>
@@ -67,18 +87,19 @@
                                             <span class="text-muted">Не указано</span>
                                         {% endif %}
                                     </td>
+                                    
+                                    <!-- Email -->
                                     <td>
                                         {% if user.email %}
-                                            <a href="mailto:{{ user.email }}">{{ user.email }}</a>
+                                            <a href="mailto:{{ user.email }}" class="text-decoration-none">
+                                                <i class="fas fa-envelope me-1"></i>{{ user.email }}
+                                            </a>
                                         {% else %}
                                             <span class="text-muted">Не указан</span>
                                         {% endif %}
                                     </td>
-                                    <td>
-                                        <span class="badge bg-info">
-                                            {{ user.registration_date|datetime_format }}
-                                        </span>
-                                    </td>
+                                    
+                                    <!-- Статус -->
                                     <td>
                                         {% if user.is_profile_complete %}
                                             <span class="badge bg-success">
@@ -90,10 +111,12 @@
                                             </span>
                                         {% endif %}
                                     </td>
+                                    
+                                    <!-- Активность -->
                                     <td>
                                         <div class="d-flex align-items-center">
-                                            <i class="fas fa-calendar-check me-2"></i>
-                                            <span>{{ user.registrations|length }} мероприятий</span>
+                                            <i class="fas fa-calendar-check me-2 text-success"></i>
+                                            <span>{{ user.registrations|length }}</span>
                                         </div>
                                     </td>
                                 </tr>
