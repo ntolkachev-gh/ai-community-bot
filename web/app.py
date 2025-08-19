@@ -66,7 +66,8 @@ def create_app():
                     description=request.form['description'],
                     event_datetime=datetime.strptime(request.form['event_datetime'], '%Y-%m-%dT%H:%M'),
                     webinar_link=request.form.get('webinar_link'),
-                    max_participants=int(request.form.get('max_participants', 100))
+                    max_participants=int(request.form.get('max_participants', 100)),
+                    image_url=request.form.get('image_url') if request.form.get('image_url') else None
                 )
                 db.add(event)
                 db.commit()
@@ -113,6 +114,7 @@ def create_app():
                 event.event_datetime = datetime.strptime(request.form['event_datetime'], '%Y-%m-%dT%H:%M')
                 event.webinar_link = request.form.get('webinar_link')
                 event.max_participants = int(request.form.get('max_participants', 100))
+                event.image_url = request.form.get('image_url') if request.form.get('image_url') else None
                 
                 db.commit()
                 flash('Мероприятие обновлено успешно!', 'success')

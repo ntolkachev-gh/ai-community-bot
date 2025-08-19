@@ -44,6 +44,19 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="image_url" class="form-label">Изображение мероприятия</label>
+                        <input type="url" class="form-control" id="image_url" name="image_url" 
+                               value="{{ event.image_url or '' }}" placeholder="https://example.com/image.jpg">
+                        <div class="form-text">Введите URL изображения для мероприятия (JPG, PNG, GIF)</div>
+                        {% if event.image_url %}
+                        <div class="mt-2">
+                            <small class="text-muted">Текущее изображение:</small><br>
+                            <img src="{{ event.image_url }}" alt="Изображение мероприятия" style="max-width: 200px; max-height: 150px;" class="img-thumbnail">
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="max_participants" class="form-label">Максимальное количество участников</label>
                         <input type="number" class="form-control" id="max_participants" name="max_participants" 
                                value="{{ event.max_participants }}" min="1">

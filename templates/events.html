@@ -25,6 +25,7 @@
                         <table class="table table-striped">
                             <thead>
                                 <tr>
+                                    <th>Изображение</th>
                                     <th>Название</th>
                                     <th>Дата и время</th>
                                     <th>Участники</th>
@@ -35,6 +36,15 @@
                             <tbody>
                                 {% for event in events %}
                                 <tr>
+                                    <td>
+                                        {% if event.image_url %}
+                                            <img src="{{ event.image_url }}" alt="Изображение мероприятия" style="width: 60px; height: 60px; object-fit: cover;" class="img-thumbnail">
+                                        {% else %}
+                                            <div style="width: 60px; height: 60px;" class="bg-light d-flex align-items-center justify-content-center img-thumbnail">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         <div>
                                             <strong>{{ event.title }}</strong>
