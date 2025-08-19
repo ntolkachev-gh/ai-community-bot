@@ -16,13 +16,12 @@
                         <div class="card">
                     <div class="card-body p-0">
                 {% if users %}
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="width: 100%; overflow-x: auto;">
                         <style>
                             .users-table {
-                                min-width: 1600px;
-                                width: 100%;
+                                min-width: 1800px;
+                                width: auto;
                                 font-size: 14px;
-                                table-layout: fixed;
                                 margin-bottom: 0;
                             }
                             .users-table th,
@@ -33,11 +32,11 @@
                             }
                             .users-table .name-col {
                                 min-width: 200px;
-                                width: 15%;
+                                width: 12%;
                             }
                             .users-table .telegram-col {
                                 min-width: 250px;
-                                width: 18%;
+                                width: 15%;
                             }
                             .users-table .date-col {
                                 min-width: 160px;
@@ -52,12 +51,12 @@
                                 width: 15%;
                             }
                             .users-table .ai-exp-col {
-                                min-width: 250px;
-                                width: 20%;
+                                min-width: 350px;
+                                width: 25%;
                             }
                             .users-table .email-col {
-                                min-width: 250px;
-                                width: 18%;
+                                min-width: 280px;
+                                width: 20%;
                             }
                             .users-table .status-col {
                                 min-width: 130px;
@@ -78,6 +77,13 @@
                             .card-body.p-0 .table-responsive {
                                 border-radius: 0.375rem;
                             }
+                            .card {
+                                width: 100%;
+                            }
+                            .col-12 {
+                                padding-left: 5px;
+                                padding-right: 5px;
+                            }
                             .users-table thead th {
                                 background-color: #f8f9fa;
                                 font-weight: 600;
@@ -87,7 +93,7 @@
                                 z-index: 10;
                             }
                         </style>
-                        <table class="table table-striped users-table">
+                        <table class="table table-striped users-table" style="width: 100%; min-width: 1800px;">
                             <thead>
                                 <tr>
                                     <th class="name-col">Имя</th>
