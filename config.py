@@ -20,6 +20,10 @@ class Config:
     WEB_HOST = os.getenv('WEB_HOST', '0.0.0.0')
     WEB_PORT = int(os.getenv('PORT', 5000))
     
+    # API Basic Auth credentials
+    API_USERNAME = os.getenv('API_USERNAME', 'admin')
+    API_PASSWORD = os.getenv('API_PASSWORD', 'ai-community-1')
+    
     @staticmethod
     def init_app(app):
         pass

@@ -3,6 +3,8 @@ from datetime import datetime
 from database.models import User, Event, Registration, get_db
 from sqlalchemy.orm import joinedload
 from config import Config
+import base64
+from functools import wraps
 
 def create_app():
     import os
@@ -10,6 +12,24 @@ def create_app():
     template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'templates'))
     app = Flask(__name__, template_folder=template_dir)
     app.config.from_object(Config)
+    
+    def check_basic_auth(username, password):
+        """Проверка Basic авторизации"""
+        return username == Config.API_USERNAME and password == Config.API_PASSWORD
+    
+    def authenticate():
+        """Отправка запроса авторизации"""
+        return jsonify({'error': 'Authentication required'}), 401, {'WWW-Authenticate': 'Basic realm="API"'}
+    
+    def requires_auth(f):
+        """Декоратор для проверки Basic авторизации"""
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            auth = request.authorization
+            if not auth or not check_basic_auth(auth.username, auth.password):
+                return authenticate()
+            return f(*args, **kwargs)
+        return decorated
     
     @app.route('/')
     def index():
@@ -171,6 +191,55 @@ def create_app():
                 'users': users_count,
                 'events': events_count,
                 'registrations': registrations_count
+            })
+        finally:
+            db.close()
+    
+    @app.route('/api/events')
+    @requires_auth
+    def api_events():
+        """API для получения списка событий с Basic авторизацией"""
+        db = next(get_db())
+        try:
+            events_query = db.query(Event).order_by(Event.event_datetime.desc())
+            
+            # Поддержка пагинации
+            page = request.args.get('page', 1, type=int)
+            per_page = request.args.get('per_page', 50, type=int)
+            
+            # Ограничиваем количество событий на страницу
+            if per_page > 100:
+                per_page = 100
+            
+            offset = (page - 1) * per_page
+            events_list = events_query.offset(offset).limit(per_page).all()
+            total_events = events_query.count()
+            
+            # Преобразуем события в JSON
+            events_data = []
+            for event in events_list:
+                event_data = {
+                    'id': event.id,
+                    'title': event.title,
+                    'description': event.description,
+                    'event_datetime': event.event_datetime.isoformat() if event.event_datetime else None,
+                    'webinar_link': event.webinar_link,
+                    'max_participants': event.max_participants,
+                    'image_url': event.image_url,
+                    'registered_participants': len(event.registrations),
+                    'available_spots': event.available_spots,
+                    'is_full': event.is_full
+                }
+                events_data.append(event_data)
+            
+            return jsonify({
+                'events': events_data,
+                'pagination': {
+                    'page': page,
+                    'per_page': per_page,
+                    'total': total_events,
+                    'pages': (total_events + per_page - 1) // per_page
+                }
             })
         finally:
             db.close()
